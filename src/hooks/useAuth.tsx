@@ -1,33 +1,27 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { UserRole, Profile } from '../types/database';
+import type { UserRole, UserStatus, Profile } from '../types/database';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import {
+  authService,
+  type AuthUser,
+  type StudentRegistrationParams,
+  type TeacherRegistrationParams,
+} from '../services/auth.service';
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  full_name: string;
-  role: UserRole;
-  is_approved: boolean;
-}
+export type { AuthUser };
 
 interface AuthContextType {
   user: AuthUser | null;
   role: UserRole | null;
   isLoading: boolean;
-  loginAsStub: (role: UserRole, isApproved?: boolean) => void;
+  signIn: (email: string, password: string) => Promise<AuthUser>;
+  registerStudent: (params: StudentRegistrationParams) => Promise<{ user: AuthUser; subjectName: string }>;
+  registerTeacher: (params: TeacherRegistrationParams) => Promise<{ user: AuthUser }>;
+  loginAsStub: (role: UserRole, isApproved?: boolean, status?: UserStatus) => void;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Initial mock stub user for quick prototyping and testing
-const DEFAULT_STUB_USER: AuthUser = {
-  id: 'stub-student-id',
-  email: 'student@recallloop.dev',
-  full_name: 'Alex Student',
-  role: 'student',
-  is_approved: true,
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => {
@@ -36,11 +30,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         return JSON.parse(saved);
       } catch {
-        return DEFAULT_STUB_USER;
+        return null;
       }
     }
-    return DEFAULT_STUB_USER;
+    return null;
   });
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -49,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    // Supabase Auth listener
+    // Supabase Auth session initial check
     const initSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -58,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
           const profile = data as unknown as Profile | null;
           if (profile) {
@@ -67,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: profile.email,
               full_name: profile.full_name,
               role: profile.role,
+              status: profile.status,
               is_approved: profile.status === 'active',
             };
             setUser(authUser);
@@ -74,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (err) {
-        console.error('Error fetching auth session:', err);
+        console.error('Error initializing auth session:', err);
       } finally {
         setIsLoading(false);
       }
@@ -82,27 +78,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initSession();
 
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session?.user) {
         return;
       }
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
 
-      const profile = data as unknown as Profile | null;
-      if (profile) {
-        const authUser: AuthUser = {
-          id: profile.id,
-          email: profile.email,
-          full_name: profile.full_name,
-          role: profile.role,
-          is_approved: profile.status === 'active',
-        };
-        setUser(authUser);
-        localStorage.setItem('recallloop_v2_auth_user', JSON.stringify(authUser));
+        const profile = data as unknown as Profile | null;
+        if (profile) {
+          const authUser: AuthUser = {
+            id: profile.id,
+            email: profile.email,
+            full_name: profile.full_name,
+            role: profile.role,
+            status: profile.status,
+            is_approved: profile.status === 'active',
+          };
+          setUser(authUser);
+          localStorage.setItem('recallloop_v2_auth_user', JSON.stringify(authUser));
+        }
+      } catch (err) {
+        console.error('Error refreshing profile on auth state change:', err);
       }
     });
 
@@ -111,26 +113,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const loginAsStub = (role: UserRole, isApproved: boolean = true) => {
+  const signIn = async (email: string, password: string): Promise<AuthUser> => {
+    setIsLoading(true);
+    try {
+      const authUser = await authService.signIn(email, password);
+      setUser(authUser);
+      localStorage.setItem('recallloop_v2_auth_user', JSON.stringify(authUser));
+      return authUser;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const registerStudent = async (params: StudentRegistrationParams) => {
+    setIsLoading(true);
+    try {
+      const result = await authService.registerStudent(params);
+      setUser(result.user);
+      localStorage.setItem('recallloop_v2_auth_user', JSON.stringify(result.user));
+      return result;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const registerTeacher = async (params: TeacherRegistrationParams) => {
+    setIsLoading(true);
+    try {
+      const result = await authService.registerTeacher(params);
+      setUser(result.user);
+      localStorage.setItem('recallloop_v2_auth_user', JSON.stringify(result.user));
+      return result;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginAsStub = (
+    role: UserRole,
+    isApproved: boolean = true,
+    customStatus?: UserStatus
+  ) => {
     const names: Record<UserRole, string> = {
       student: 'Alex Student',
       teacher: isApproved ? 'Prof. Sarah Lin' : 'Jane Doe (Pending)',
       admin: 'Root Administrator',
     };
+
+    const status: UserStatus = customStatus
+      ? customStatus
+      : role === 'teacher' && !isApproved
+      ? 'pending'
+      : 'active';
+
     const stubUser: AuthUser = {
       id: `stub-${role}-id`,
       email: `${role}@recallloop.dev`,
       full_name: names[role],
       role,
-      is_approved: role === 'teacher' ? isApproved : true,
+      status,
+      is_approved: status === 'active',
     };
+
     setUser(stubUser);
     localStorage.setItem('recallloop_v2_auth_user', JSON.stringify(stubUser));
   };
 
   const signOut = async () => {
-    if (isSupabaseConfigured) {
-      await supabase.auth.signOut();
+    try {
+      await authService.signOut();
+    } catch (err) {
+      console.warn('Sign out warning:', err);
     }
     setUser(null);
     localStorage.removeItem('recallloop_v2_auth_user');
@@ -142,6 +195,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         role: user?.role || null,
         isLoading,
+        signIn,
+        registerStudent,
+        registerTeacher,
         loginAsStub,
         signOut,
       }}

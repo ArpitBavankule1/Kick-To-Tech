@@ -16,31 +16,41 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { user, isLoading } = useAuth();
   const location = useLocation();
 
+  // 1. Accessible Loading State
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-950">
+      <div
+        className="min-h-[60vh] flex items-center justify-center p-6"
+        role="status"
+        aria-live="polite"
+        aria-label="Verifying authorization and credentials"
+      >
         <div className="w-full max-w-md space-y-4">
-          <Skeleton height={32} />
-          <Skeleton height={120} />
-          <Skeleton height={40} />
+          <Skeleton height={28} className="w-1/2 mx-auto" />
+          <Skeleton height={140} className="w-full rounded-2xl" />
+          <Skeleton height={44} className="w-full rounded-xl" />
         </div>
       </div>
     );
   }
 
-  // 1. Session check: Not logged in
+  // 2. Session Check: No active session -> redirect to /login
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // 2. Teacher approval check: Rule: Teachers need admin approval
-  if (user.role === 'teacher' && !user.is_approved) {
+  // 3. Status Check: Pending or Suspended accounts -> redirect to /pending
+  const isPendingOrSuspended =
+    user.status === 'pending' ||
+    user.status === 'suspended' ||
+    (user.role === 'teacher' && !user.is_approved);
+
+  if (isPendingOrSuspended) {
     return <Navigate to="/pending" replace />;
   }
 
-  // 3. Role check: If specific roles are required
+  // 4. Role Authorization Check: Wrong role -> redirect to appropriate home
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Route to user's authorized home or root
     const fallbackPath =
       user.role === 'student'
         ? '/student'
