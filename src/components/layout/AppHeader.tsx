@@ -99,8 +99,11 @@ export const AppHeader: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <Link to="/login">
-              <Button size="sm">Sign In</Button>
+            <Link
+              to="/login"
+              className="px-4 py-2 rounded-xl bg-cyan-400 text-slate-900 font-semibold hover:bg-cyan-300 text-xs shadow-sm shadow-cyan-500/20 transition-all inline-flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            >
+              Sign In
             </Link>
           )}
         </div>
