@@ -1,6 +1,14 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { Attempt } from '../types/database';
 
+export interface SubmitAttemptResult {
+  attempt_id: string;
+  is_correct: boolean;
+  correct_index: number;
+  explanation: string;
+  wrong_reason: string | null;
+}
+
 export const attemptsService = {
   /**
    * Fetches all recorded attempts for a student to dynamically derive mastery.
@@ -8,7 +16,6 @@ export const attemptsService = {
    */
   async getStudentAttempts(studentId: string): Promise<Attempt[]> {
     if (!isSupabaseConfigured) {
-      // Local fallback
       return [];
     }
 
@@ -23,11 +30,38 @@ export const attemptsService = {
       throw error;
     }
 
-    return data || [];
+    return (data as unknown as Attempt[]) || [];
   },
 
   /**
-   * Records a verified student attempt.
+   * Submits an attempt via secure server-side RPC function.
+   * Prevents students from inspecting `correct_index` before answering.
+   */
+  async submitAttemptSecure(
+    questionId: string,
+    selectedAnswer: number,
+    assignmentId?: string | null
+  ): Promise<SubmitAttemptResult | null> {
+    if (!isSupabaseConfigured) {
+      return null;
+    }
+
+    const { data, error } = await supabase.rpc('submit_attempt', {
+      p_question_id: questionId,
+      p_selected_answer: selectedAnswer,
+      p_assignment_id: assignmentId || null,
+    });
+
+    if (error) {
+      console.error('Error in secure attempt submission:', error);
+      throw error;
+    }
+
+    return data as unknown as SubmitAttemptResult;
+  },
+
+  /**
+   * Fallback direct insert if RPC is not available in local mock mode.
    */
   async recordAttempt(attempt: Omit<Attempt, 'id' | 'created_at'>): Promise<Attempt | null> {
     if (!isSupabaseConfigured) {

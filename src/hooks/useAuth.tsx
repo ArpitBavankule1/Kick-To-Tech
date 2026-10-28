@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: profile.email,
               full_name: profile.full_name,
               role: profile.role,
-              is_approved: profile.is_approved,
+              is_approved: profile.status === 'active',
             };
             setUser(authUser);
             localStorage.setItem('recallloop_v2_auth_user', JSON.stringify(authUser));
@@ -99,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: profile.email,
           full_name: profile.full_name,
           role: profile.role,
-          is_approved: profile.is_approved,
+          is_approved: profile.status === 'active',
         };
         setUser(authUser);
         localStorage.setItem('recallloop_v2_auth_user', JSON.stringify(authUser));
