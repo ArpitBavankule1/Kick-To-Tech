@@ -11,3 +11,4 @@
 export * from './mastery';
 export * from './recommend';
 export * from './insights';
+export * from './quizValidator';
