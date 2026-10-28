@@ -25,6 +25,7 @@ import { AssignTopicPage } from './pages/teacher/AssignTopicPage';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 import { AdminSubjectsPage } from './pages/admin/AdminSubjectsPage';
+import { AdminMappingPage } from './pages/admin/AdminMappingPage';
 
 export const App: React.FC = () => {
   return (
@@ -107,6 +108,14 @@ export const App: React.FC = () => {
                   element={
                     <ProtectedRoute allowedRoles={['admin']}>
                       <AdminSubjectsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/mapping"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminMappingPage />
                     </ProtectedRoute>
                   }
                 />

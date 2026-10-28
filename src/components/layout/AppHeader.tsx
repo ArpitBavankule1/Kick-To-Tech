@@ -72,6 +72,9 @@ export const AppHeader: React.FC = () => {
               <Link to="/admin/subjects" className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 Subjects & Topics
               </Link>
+              <Link to="/admin/mapping" className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                Faculty Mapping
+              </Link>
             </>
           )}
         </nav>
