@@ -1,239 +1,124 @@
-import React, { useState, useMemo } from 'react';
-import {
-  Sparkles,
-  Map,
-  BookOpen,
-  History,
-} from 'lucide-react';
-import type { UserAnswer, Question, TopicId, Recommendation } from './types';
-import { TOPIC_CONFIGS, QUESTIONS } from './data/questions';
-import { calculateTopicMastery, calculateOverallStats } from './utils/mastery';
-import { getNextRecommendation } from './utils/recommender';
-import {
-  loadAnswersFromStorage,
-  saveAnswersToStorage,
-  clearAnswersFromStorage,
-} from './utils/storage';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './hooks/useAuth';
+import { ToastProvider } from './components/ui/Toast';
+import { AppHeader } from './components/layout/AppHeader';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
-import { Navbar } from './components/Navbar';
-import { DashboardStats } from './components/DashboardStats';
-import { AdaptivePractice } from './components/AdaptivePractice';
-import { KnowledgeMap } from './components/KnowledgeMap';
-import { DiagnosticQuiz } from './components/DiagnosticQuiz';
-import { HistoryLog } from './components/HistoryLog';
-import { ResetConfirmModal } from './components/ResetConfirmModal';
+// Public Pages
+import { LandingPage } from './pages/public/LandingPage';
+import { LoginPage } from './pages/public/LoginPage';
+import { RegisterPage } from './pages/public/RegisterPage';
+import { PendingPage } from './pages/public/PendingPage';
+import { NotFoundPage } from './pages/public/NotFoundPage';
+
+// Student Pages
+import { StudentDashboard } from './pages/student/StudentDashboard';
+import { SubjectDetailPage } from './pages/student/SubjectDetailPage';
+import { QuizSessionPage } from './pages/student/QuizSessionPage';
+
+// Teacher Pages
+import { TeacherDashboard } from './pages/teacher/TeacherDashboard';
+import { AssignTopicPage } from './pages/teacher/AssignTopicPage';
+
+// Admin Pages
+import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { AdminUsersPage } from './pages/admin/AdminUsersPage';
+import { AdminSubjectsPage } from './pages/admin/AdminSubjectsPage';
 
 export const App: React.FC = () => {
-  const [userAnswers, setUserAnswers] = useState<UserAnswer[]>(() =>
-    loadAnswersFromStorage()
-  );
-  const [activeTab, setActiveTab] = useState<
-    'adaptive' | 'knowledge_map' | 'quiz' | 'history'
-  >('adaptive');
-  const [customActiveQuestion, setCustomActiveQuestion] =
-    useState<Question | null>(null);
-  const [isResetModalOpen, setIsResetModalOpen] = useState<boolean>(false);
-
-  // 1. Pure Mastery Calculations
-  const masteries = useMemo(
-    () => calculateTopicMastery(userAnswers, TOPIC_CONFIGS, QUESTIONS),
-    [userAnswers]
-  );
-
-  // 2. Aggregate Learning Statistics
-  const stats = useMemo(
-    () => calculateOverallStats(userAnswers, masteries),
-    [userAnswers, masteries]
-  );
-
-  // 3. Pure Deterministic Recommendation
-  const adaptiveRec = useMemo(
-    () => getNextRecommendation(userAnswers, QUESTIONS, TOPIC_CONFIGS),
-    [userAnswers]
-  );
-
-  // Active recommendation (either adaptive recommendation or direct topic practice)
-  const activeRecommendation: Recommendation | null = useMemo(() => {
-    if (customActiveQuestion) {
-      const topicMastery = masteries[customActiveQuestion.topic];
-      return {
-        question: customActiveQuestion,
-        targetTopic: customActiveQuestion.topic,
-        topicTitle: customActiveQuestion.topicTitle,
-        recommendationType:
-          topicMastery.status === 'weak'
-            ? 'weak_targeted'
-            : topicMastery.status === 'not_assessed'
-            ? 'new_topic_diagnostic'
-            : 'developing_targeted',
-        reason: `Direct Practice: Selected challenge targeting "${customActiveQuestion.concept}" in ${customActiveQuestion.topicTitle}.`,
-        masteryBefore: topicMastery.accuracyPercentage,
-        statusBefore: topicMastery.status,
-      };
-    }
-    return adaptiveRec;
-  }, [customActiveQuestion, adaptiveRec, masteries]);
-
-  // Answer Submission Handler
-  const handleAnswerSubmit = (
-    question: Question,
-    selectedOption: number,
-    isCorrect: boolean
-  ) => {
-    const newAnswer: UserAnswer = {
-      questionId: question.id,
-      topic: question.topic,
-      selectedAnswer: selectedOption,
-      isCorrect,
-      timestamp: Date.now(),
-    };
-
-    const updated = [...userAnswers, newAnswer];
-    setUserAnswers(updated);
-    saveAnswersToStorage(updated);
-  };
-
-  // Next Question Handler
-  const handleNextQuestion = () => {
-    setCustomActiveQuestion(null);
-  };
-
-  // Reset Progress Handler
-  const handleConfirmReset = () => {
-    clearAnswersFromStorage();
-    setUserAnswers([]);
-    setCustomActiveQuestion(null);
-    setActiveTab('adaptive');
-  };
-
-  // Select Topic from Knowledge Map
-  const handleSelectTopicForPractice = (topicId: TopicId) => {
-    // Pick first uncompleted question from this topic
-    const topicQuestions = QUESTIONS.filter((q) => q.topic === topicId);
-    const solvedIds = new Set(
-      userAnswers.filter((a) => a.isCorrect).map((a) => a.questionId)
-    );
-    const uncompleted = topicQuestions.filter((q) => !solvedIds.has(q.id));
-    const target = uncompleted.length > 0 ? uncompleted[0] : topicQuestions[0];
-
-    setCustomActiveQuestion(target);
-    setActiveTab('adaptive');
-  };
-
-  // Select Question directly from Question Bank
-  const handleSelectQuestion = (question: Question) => {
-    setCustomActiveQuestion(question);
-    setActiveTab('adaptive');
-  };
-
   return (
-    <div className="app-container">
-      {/* Top Navbar */}
-      <Navbar
-        stats={stats}
-        onOpenResetModal={() => setIsResetModalOpen(true)}
-      />
+    <BrowserRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-150">
+            <AppHeader />
+            <main className="flex-1">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/pending" element={<PendingPage />} />
 
-      <main className="main-content">
-        {/* Metric Cards Bar */}
-        <DashboardStats
-          stats={stats}
-          totalQuestions={QUESTIONS.length}
-        />
+                {/* Student Routes */}
+                <Route
+                  path="/student"
+                  element={
+                    <ProtectedRoute allowedRoles={['student', 'admin']}>
+                      <StudentDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/student/subject/:id"
+                  element={
+                    <ProtectedRoute allowedRoles={['student', 'admin']}>
+                      <SubjectDetailPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/student/quiz/:assignmentId"
+                  element={
+                    <ProtectedRoute allowedRoles={['student', 'admin']}>
+                      <QuizSessionPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-        {/* Tab Navigation */}
-        <nav className="tab-navigation" aria-label="Learning Modes">
-          <button
-            type="button"
-            className={`tab-btn ${activeTab === 'adaptive' ? 'active' : ''}`}
-            onClick={() => {
-              setCustomActiveQuestion(null);
-              setActiveTab('adaptive');
-            }}
-          >
-            <Sparkles size={16} />
-            <span>Adaptive Practice</span>
-          </button>
+                {/* Teacher Routes (Gated by admin approval) */}
+                <Route
+                  path="/teacher"
+                  element={
+                    <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                      <TeacherDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/teacher/assign"
+                  element={
+                    <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                      <AssignTopicPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-          <button
-            type="button"
-            className={`tab-btn ${activeTab === 'knowledge_map' ? 'active' : ''}`}
-            onClick={() => setActiveTab('knowledge_map')}
-          >
-            <Map size={16} />
-            <span>Knowledge Map</span>
-          </button>
+                {/* Admin Routes (Seeded only) */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/users"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminUsersPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/subjects"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminSubjectsPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-          <button
-            type="button"
-            className={`tab-btn ${activeTab === 'quiz' ? 'active' : ''}`}
-            onClick={() => setActiveTab('quiz')}
-          >
-            <BookOpen size={16} />
-            <span>Question Bank</span>
-          </button>
-
-          <button
-            type="button"
-            className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveTab('history')}
-          >
-            <History size={16} />
-            <span>Answer History ({userAnswers.length})</span>
-          </button>
-        </nav>
-
-        {/* Tab 1: Adaptive Practice */}
-        {activeTab === 'adaptive' && (
-          <AdaptivePractice
-            recommendation={activeRecommendation}
-            masteries={masteries}
-            onAnswerSubmit={handleAnswerSubmit}
-            onNextQuestion={handleNextQuestion}
-            onNavigateToKnowledgeMap={() => setActiveTab('knowledge_map')}
-            onResetProgress={() => setIsResetModalOpen(true)}
-          />
-        )}
-
-        {/* Tab 2: Knowledge Map */}
-        {activeTab === 'knowledge_map' && (
-          <KnowledgeMap
-            topicConfigs={TOPIC_CONFIGS}
-            masteries={masteries}
-            onSelectTopicForPractice={handleSelectTopicForPractice}
-          />
-        )}
-
-        {/* Tab 3: Diagnostic Question Bank */}
-        {activeTab === 'quiz' && (
-          <DiagnosticQuiz
-            questions={QUESTIONS}
-            topicConfigs={TOPIC_CONFIGS}
-            userAnswers={userAnswers}
-            onSelectQuestion={handleSelectQuestion}
-          />
-        )}
-
-        {/* Tab 4: Answer History */}
-        {activeTab === 'history' && (
-          <HistoryLog
-            answers={userAnswers}
-            questions={QUESTIONS}
-            onStartPracticing={() => {
-              setCustomActiveQuestion(null);
-              setActiveTab('adaptive');
-            }}
-          />
-        )}
-      </main>
-
-      {/* Reset Confirmation Modal */}
-      <ResetConfirmModal
-        isOpen={isResetModalOpen}
-        onClose={() => setIsResetModalOpen(false)}
-        onConfirm={handleConfirmReset}
-      />
-    </div>
+                {/* 404 Fallback */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </main>
+          </div>
+        </ToastProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 };
 
