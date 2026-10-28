@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ToastProvider } from './components/ui/Toast';
 import { AppHeader } from './components/layout/AppHeader';
+import { DevRoleSwitcher } from './components/layout/DevRoleSwitcher';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Public Pages
@@ -124,6 +125,7 @@ export const App: React.FC = () => {
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>
+            <DevRoleSwitcher />
           </div>
         </ToastProvider>
       </AuthProvider>
