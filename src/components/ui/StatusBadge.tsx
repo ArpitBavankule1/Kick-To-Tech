@@ -2,8 +2,10 @@ import React from 'react';
 import { HelpCircle, AlertTriangle, TrendingUp, ShieldCheck } from 'lucide-react';
 import type { MasteryLevel } from '../../types/database';
 
+export type SupportedStatus = MasteryLevel | 'improving' | 'not-assessed';
+
 export interface StatusBadgeProps {
-  status: MasteryLevel;
+  status: SupportedStatus;
   accuracy?: number | null;
   size?: 'sm' | 'md';
   className?: string;
@@ -21,6 +23,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   className = '',
 }) => {
   const iconSize = size === 'sm' ? 12 : 14;
+
+  const normalizedStatus: MasteryLevel =
+    status === 'improving' ? 'developing' : status === 'not-assessed' ? 'not_assessed' : status;
 
   const config: Record<
     MasteryLevel,
@@ -56,7 +61,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     },
   };
 
-  const item = config[status] || config.not_assessed;
+  const item = config[normalizedStatus] || config.not_assessed;
   const sizeStyles =
     size === 'sm' ? 'text-[11px] px-2 py-0.5' : 'text-xs px-2.5 py-1';
 
@@ -64,11 +69,11 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     <span
       className={`inline-flex items-center gap-1.5 font-semibold rounded-full border shadow-2xs select-none ${sizeStyles} ${item.styles} ${className}`}
       data-testid="status-badge"
-      data-status={status}
+      data-status={normalizedStatus}
     >
       {item.icon}
       <span>{item.label}</span>
-      {typeof accuracy === 'number' && status !== 'not_assessed' && (
+      {typeof accuracy === 'number' && normalizedStatus !== 'not_assessed' && (
         <span className="opacity-75 font-normal">({accuracy}%)</span>
       )}
     </span>

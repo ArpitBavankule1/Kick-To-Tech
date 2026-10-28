@@ -9,6 +9,13 @@ export const FALLBACK_SUBJECTS: Subject[] = [
     description: 'Core introductory computer science sequence covering memory management, control structures, and fundamental algorithms.',
     created_at: new Date().toISOString(),
   },
+  {
+    id: 'subj-data200',
+    code: 'DATA200',
+    name: 'Data Structures & Algorithms',
+    description: 'Advanced data models, pointer structures, tree traversals, and amortized runtime complexities.',
+    created_at: new Date().toISOString(),
+  },
 ];
 
 export const subjectsService = {
@@ -81,6 +88,10 @@ export const subjectsService = {
 
       const subject = data as unknown as Subject | null;
       if (!subject) {
+        const fallbackMatch = FALLBACK_SUBJECTS.find((s) => s.code.toUpperCase() === code);
+        if (fallbackMatch) {
+          return { valid: true, subject: fallbackMatch };
+        }
         return {
           valid: false,
           error: `Subject code "${code}" was not found. Please verify with your instructor (e.g., CS101).`,
