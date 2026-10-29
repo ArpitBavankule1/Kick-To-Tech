@@ -89,25 +89,28 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 relative">
+      {/* Ambient Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] max-w-full h-[320px] bg-gradient-to-tr from-cyan-500/10 via-blue-500/10 to-indigo-500/10 blur-[100px] pointer-events-none rounded-full" />
+
+      <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 border border-cyan-500/20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/25 backdrop-blur-md">
             <Sparkles size={12} />
             <span>Multi-Role Platform</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
             Sign In to RecallLoop AI
           </h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
+          <p className="text-xs text-slate-300">
             Access your adaptive dashboard and practice modules
           </p>
         </div>
 
-        <Card>
+        <Card className="shadow-2xl backdrop-blur-xl border-slate-700/60 bg-slate-900/70">
           {errorMessage && (
             <div
-              className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 flex items-start gap-2.5"
+              className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 flex items-start gap-2.5"
               role="alert"
             >
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
@@ -117,7 +120,7 @@ export const LoginPage: React.FC = () => {
 
           {successMessage && (
             <div
-              className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 flex items-start gap-2.5"
+              className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-start gap-2.5"
               role="status"
             >
               <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
@@ -159,8 +162,8 @@ export const LoginPage: React.FC = () => {
           </form>
 
           {/* Quick Sandbox Role Switcher */}
-          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 text-center">
+          <div className="mt-6 pt-5 border-t border-slate-800 space-y-2.5">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 text-center">
               Quick Role Evaluation Simulator
             </p>
             <div className="grid grid-cols-2 gap-2">
@@ -200,11 +203,11 @@ export const LoginPage: React.FC = () => {
           </div>
         </Card>
 
-        <p className="text-center text-xs text-slate-600 dark:text-slate-400">
+        <p className="text-center text-xs text-slate-300">
           Don't have an account yet?{' '}
           <Link
             to="/register"
-            className="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline"
+            className="font-semibold text-cyan-400 hover:text-cyan-300 hover:underline transition-colors"
           >
             Register as Student or Teacher
           </Link>

@@ -100,35 +100,38 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg space-y-6">
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 relative">
+      {/* Ambient Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] max-w-full h-[360px] bg-gradient-to-tr from-cyan-500/10 via-blue-500/10 to-indigo-500/10 blur-[110px] pointer-events-none rounded-full" />
+
+      <div className="w-full max-w-lg space-y-6 relative z-10">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
             Create Your Account
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-slate-300">
             Join RecallLoop AI — adaptive, data-driven learning
           </p>
         </div>
 
-        <Card>
+        <Card className="shadow-2xl backdrop-blur-xl border-slate-700/60 bg-slate-900/70">
           {/* Role Chooser Tabs */}
           <div className="mb-6">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-              Select Your Role <span className="text-rose-500">*</span>
+            <label className="block text-xs font-semibold text-slate-300 mb-2">
+              Select Your Role <span className="text-rose-400">*</span>
             </label>
-            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <div className="grid grid-cols-2 gap-2 p-1.5 rounded-xl bg-slate-950/80 border border-slate-700/80">
               <button
                 type="button"
                 onClick={() => {
                   setRole('student');
                   setErrorMessage(null);
                 }}
-                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   role === 'student'
-                    ? 'bg-cyan-500 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/25'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
                 aria-pressed={role === 'student'}
               >
@@ -142,10 +145,10 @@ export const RegisterPage: React.FC = () => {
                   setRole('teacher');
                   setErrorMessage(null);
                 }}
-                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   role === 'teacher'
-                    ? 'bg-amber-500 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
                 aria-pressed={role === 'teacher'}
               >
@@ -153,7 +156,7 @@ export const RegisterPage: React.FC = () => {
                 <span>Teacher</span>
               </button>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 px-1">
+            <p className="text-[11px] text-slate-400 mt-2 px-1">
               {role === 'student'
                 ? 'Immediate access to adaptive quizzes and practice in enrolled subjects.'
                 : 'Educator access to assign daily topics. Requires administrator verification.'}
@@ -163,7 +166,7 @@ export const RegisterPage: React.FC = () => {
           {/* Error & Success Alerts */}
           {errorMessage && (
             <div
-              className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 flex items-start gap-2.5"
+              className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 flex items-start gap-2.5"
               role="alert"
             >
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
@@ -173,7 +176,7 @@ export const RegisterPage: React.FC = () => {
 
           {successMessage && (
             <div
-              className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 flex items-start gap-2.5"
+              className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-start gap-2.5"
               role="status"
             >
               <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
@@ -246,8 +249,8 @@ export const RegisterPage: React.FC = () => {
                   disabled={isLoading}
                 />
 
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
-                  <Shield size={16} className="shrink-0 mt-0.5 text-amber-500" />
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-2">
+                  <Shield size={16} className="shrink-0 mt-0.5 text-amber-400" />
                   <span>
                     <strong>Rule:</strong> Newly registered teachers are set to <strong>pending</strong> status and cannot author assignments until approved by an administrator.
                   </span>
@@ -266,8 +269,8 @@ export const RegisterPage: React.FC = () => {
           </form>
 
           {/* Privacy Note */}
-          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-2">
-            <Lock size={14} className="shrink-0 mt-0.5 text-slate-400" />
+          <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-400 flex items-start gap-2">
+            <Lock size={14} className="shrink-0 mt-0.5 text-cyan-400" />
             <span>
               <strong>Privacy Note:</strong> We collect only your name, email, and academic quiz attempt logs to compute dynamic concept mastery. We never sell your personal data or share it with external third parties.
             </span>
@@ -275,11 +278,11 @@ export const RegisterPage: React.FC = () => {
         </Card>
 
         {/* Footer Link */}
-        <p className="text-center text-xs text-slate-600 dark:text-slate-400">
+        <p className="text-center text-xs text-slate-300">
           Already have an account?{' '}
           <Link
             to="/login"
-            className="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline"
+            className="font-semibold text-cyan-400 hover:text-cyan-300 hover:underline transition-colors"
           >
             Sign in here
           </Link>
