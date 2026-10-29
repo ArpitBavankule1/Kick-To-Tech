@@ -230,6 +230,17 @@ export const teacherService = {
       };
     }
 
+    // Enforce daily cap on quiz generation per teacher (Maximum 10 generations per day)
+    const DAILY_CAP = 10;
+    const genCountKey = `recallloop_v2_quiz_gen_count_${teacherId}_${assignedDate}`;
+    const currentCount = parseInt(localStorage.getItem(genCountKey) || '0', 10);
+    if (currentCount >= DAILY_CAP) {
+      return {
+        success: false,
+        error: `Daily quiz generation cap reached: Maximum ${DAILY_CAP} quiz generations per teacher per day. Please try again tomorrow.`,
+      };
+    }
+
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase.functions.invoke('generate-quiz', {
@@ -241,8 +252,13 @@ export const teacherService = {
         });
 
         if (error) {
-          // If edge function returned an error response
           const errMsg = error.message || 'Edge function execution failed.';
+          if (errMsg.includes('429') || errMsg.includes('cap reached') || errMsg.includes('limit reached')) {
+            return {
+              success: false,
+              error: `Daily quiz generation cap reached: Maximum ${DAILY_CAP} quiz generations per teacher per day. Please try again tomorrow.`,
+            };
+          }
           if (errMsg.includes('409') || errMsg.includes('already exists')) {
             return {
               success: false,
@@ -251,6 +267,7 @@ export const teacherService = {
           }
           // Fall back to offline generation if function is not deployed on remote project
         } else if (data && data.success && data.questions) {
+          localStorage.setItem(genCountKey, String(currentCount + 1));
           return {
             success: true,
             assignmentId: data.assignmentId,
@@ -420,6 +437,7 @@ export const teacherService = {
     const questionsList = getLocalQuestions().filter(q => q.topic_id !== topicId);
     questionsList.push(...dbQuestions);
     saveLocalQuestions(questionsList);
+    localStorage.setItem(genCountKey, String(currentCount + 1));
 
     return {
       success: true,

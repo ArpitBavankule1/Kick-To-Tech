@@ -67,11 +67,14 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 
   return (
     <span
+      role="status"
+      aria-label={`Status: ${item.label}${typeof accuracy === 'number' && normalizedStatus !== 'not_assessed' ? ` (${accuracy}%)` : ''}`}
       className={`inline-flex items-center gap-1.5 font-semibold rounded-full border shadow-2xs select-none ${sizeStyles} ${item.styles} ${className}`}
       data-testid="status-badge"
       data-status={normalizedStatus}
     >
       {item.icon}
+      <span className="sr-only">Status: </span>
       <span>{item.label}</span>
       {typeof accuracy === 'number' && normalizedStatus !== 'not_assessed' && (
         <span className="opacity-75 font-normal">({accuracy}%)</span>

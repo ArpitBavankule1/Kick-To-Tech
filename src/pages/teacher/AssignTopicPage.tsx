@@ -275,8 +275,8 @@ export const AssignTopicPage: React.FC = () => {
 
             {/* Error Banner if generation failed */}
             {generationError && (
-              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 flex items-start gap-2">
-                <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+              <div role="alert" className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 flex items-start gap-2">
+                <AlertTriangle size={15} className="shrink-0 mt-0.5" aria-hidden="true" />
                 <span>{generationError}</span>
               </div>
             )}

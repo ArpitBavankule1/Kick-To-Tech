@@ -256,7 +256,11 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
         )}
 
         {/* 4 Multiple Choice Options */}
-        <div className="space-y-3 w-full">
+        <div
+          role="radiogroup"
+          aria-label="Question options"
+          className="space-y-3 w-full"
+        >
           {question.options.map((optionText, idx) => {
             let stateStyles =
               'border-slate-700/80 bg-slate-900/50 hover:bg-slate-800/80 hover:border-slate-500 text-slate-200';
@@ -284,8 +288,17 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
               <button
                 key={idx}
                 type="button"
+                role="radio"
+                aria-checked={selectedOption === idx}
+                aria-label={`Option ${optionLetters[idx]}: ${optionText}`}
                 className={`w-full text-left p-3.5 sm:p-4 rounded-xl border transition-all duration-150 flex items-start gap-3 sm:gap-4 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 min-h-[48px] ${stateStyles}`}
                 onClick={() => handleSelect(idx)}
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSelect(idx);
+                  }
+                }}
                 disabled={isAnswered}
               >
                 <span

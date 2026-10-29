@@ -98,6 +98,24 @@ describe('teacherService', () => {
       expect(secondGenRes.success).toBe(false);
       expect(secondGenRes.error).toContain('already exists for today');
     });
+
+    it('enforces a daily cap of 10 quiz generations per teacher per day', async () => {
+      const testDate = '2026-11-02';
+      const teacherId = 'teacher-mock-cap-test';
+
+      // Pre-populate 10 generations in storage for this teacher on this date
+      localStorage.setItem(`recallloop_v2_quiz_gen_count_${teacherId}_${testDate}`, '10');
+
+      const cappedResult = await teacherService.generateQuizQuestions({
+        subjectId: 'subj-cs101',
+        topicId: 'topic-pointers',
+        assignedDate: testDate,
+        teacherId,
+      });
+
+      expect(cappedResult.success).toBe(false);
+      expect(cappedResult.error).toMatch(/daily quiz generation cap reached/i);
+    });
   });
 
   describe('getClassOverview', () => {

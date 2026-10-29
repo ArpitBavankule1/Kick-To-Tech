@@ -14,6 +14,8 @@ interface AuthContextType {
   user: AuthUser | null;
   role: UserRole | null;
   isLoading: boolean;
+  isSessionExpired: boolean;
+  clearSessionExpired: () => void;
   signIn: (email: string, password: string) => Promise<AuthUser>;
   registerStudent: (params: StudentRegistrationParams) => Promise<{ user: AuthUser; subjectName: string }>;
   registerTeacher: (params: TeacherRegistrationParams) => Promise<{ user: AuthUser }>;
@@ -37,6 +39,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSessionExpired, setIsSessionExpired] = useState<boolean>(false);
+
+  const clearSessionExpired = () => setIsSessionExpired(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -68,6 +73,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(authUser);
             localStorage.setItem('recallloop_v2_auth_user', JSON.stringify(authUser));
           }
+        } else if (user) {
+          // Stored session has expired
+          setUser(null);
+          localStorage.removeItem('recallloop_v2_auth_user');
+          setIsSessionExpired(true);
         }
       } catch (err) {
         console.error('Error initializing auth session:', err);
@@ -78,11 +88,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initSession();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!session?.user) {
+    // Listen for auth state changes & session expirations
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        if (event !== 'SIGNED_OUT' && user) {
+          setIsSessionExpired(true);
+        }
+        setUser(null);
+        localStorage.removeItem('recallloop_v2_auth_user');
         return;
       }
+
       try {
         const { data } = await supabase
           .from('profiles')
@@ -195,6 +211,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         role: user?.role || null,
         isLoading,
+        isSessionExpired,
+        clearSessionExpired,
         signIn,
         registerStudent,
         registerTeacher,

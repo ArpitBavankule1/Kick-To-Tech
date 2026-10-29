@@ -140,6 +140,24 @@ serve(async (req: Request) => {
       );
     }
 
+    // 5.5 Enforce daily quiz generation cap per teacher (Max 10 per day)
+    const DAILY_QUIZ_GEN_CAP = 10;
+    const todayIso = new Date().toISOString().split("T")[0];
+    const { count: dailyGenerationsCount, error: capErr } = await supabaseAdmin
+      .from("assignments")
+      .select("id", { count: "exact", head: true })
+      .eq("teacher_id", callerId)
+      .eq("assigned_date", todayIso);
+
+    if (!capErr && dailyGenerationsCount !== null && dailyGenerationsCount >= DAILY_QUIZ_GEN_CAP) {
+      return new Response(
+        JSON.stringify({
+          error: `Daily quiz generation cap reached: Maximum ${DAILY_QUIZ_GEN_CAP} quiz generations per teacher per day. Please try again tomorrow.`,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // 6. Reject if a published assignment already exists for that subject on that date
     const { data: existingAssignment, error: existingErr } = await supabaseAdmin
       .from("assignments")

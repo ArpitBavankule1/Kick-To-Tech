@@ -411,6 +411,13 @@ export const QuizSessionPage: React.FC = () => {
                     value={optIdx}
                     checked={isSelected}
                     onChange={() => handleSelectOption(optIdx)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSelectOption(optIdx);
+                      }
+                    }}
+                    aria-label={`Option ${String.fromCharCode(65 + optIdx)}: ${optText}`}
                     disabled={isAnswered || isSubmitting}
                     className="mt-0.5 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
                   />

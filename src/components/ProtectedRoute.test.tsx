@@ -38,6 +38,8 @@ describe('ProtectedRoute', () => {
       registerTeacher: vi.fn(),
       loginAsStub: vi.fn(),
       signOut: vi.fn(),
+      isSessionExpired: false,
+      clearSessionExpired: vi.fn(),
     });
 
     renderWithRouter(
@@ -69,6 +71,8 @@ describe('ProtectedRoute', () => {
       registerTeacher: vi.fn(),
       loginAsStub: vi.fn(),
       signOut: vi.fn(),
+      isSessionExpired: false,
+      clearSessionExpired: vi.fn(),
     });
 
     renderWithRouter(
@@ -100,6 +104,8 @@ describe('ProtectedRoute', () => {
       registerTeacher: vi.fn(),
       loginAsStub: vi.fn(),
       signOut: vi.fn(),
+      isSessionExpired: false,
+      clearSessionExpired: vi.fn(),
     });
 
     // Student attempting to access admin route
@@ -132,6 +138,8 @@ describe('ProtectedRoute', () => {
       registerTeacher: vi.fn(),
       loginAsStub: vi.fn(),
       signOut: vi.fn(),
+      isSessionExpired: false,
+      clearSessionExpired: vi.fn(),
     });
 
     renderWithRouter(
