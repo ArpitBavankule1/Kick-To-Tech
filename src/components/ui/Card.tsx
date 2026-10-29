@@ -27,7 +27,7 @@ export const Card: React.FC<CardProps> = ({
           {header}
         </div>
       )}
-      <div className={header || footer ? 'p-6' : ''}>{children}</div>
+      <div className={header || footer ? 'p-6' : className.includes('p-') ? '' : 'p-6'}>{children}</div>
       {footer && (
         <div className="px-6 py-4 border-t border-slate-700/60">
           {footer}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Sparkles,
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   ArrowRight,
   TrendingUp,
@@ -49,34 +49,40 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
     status: MasteryStatus;
   } | null>(null);
 
-  // If no recommendation exists (all questions completed or empty pool)
+  // 1. Empty state: when all questions are mastered or pool is exhausted
   if (!recommendation) {
     return (
-      <div className="empty-state">
-        <Award size={56} className="empty-icon" style={{ color: '#10b981' }} />
-        <h2 className="empty-title">All Curriculum Questions Mastered!</h2>
-        <p className="empty-desc">
-          Outstanding work! You have solved every available question across all topics.
-          Check your Knowledge Map to view your complete mastery status, or reset progress
-          to run a fresh diagnostic simulation.
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="primary-btn"
-            onClick={onNavigateToKnowledgeMap}
-          >
-            <Layers size={16} />
-            <span>Inspect Knowledge Map</span>
-          </button>
-          <button
-            type="button"
-            className="secondary-btn"
-            onClick={onResetProgress}
-          >
-            <RotateCcw size={16} />
-            <span>Reset Diagnostic</span>
-          </button>
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        <div className="p-8 sm:p-12 rounded-2xl border border-slate-700/60 bg-slate-900/60 backdrop-blur-md text-center flex flex-col items-center justify-center space-y-4 shadow-xl">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2 shadow-lg shadow-emerald-500/10">
+            <Award size={36} />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            All Curriculum Questions Mastered!
+          </h2>
+          <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto leading-relaxed">
+            Outstanding work! You have solved every available question across all topics.
+            Inspect your Knowledge Map to view your complete mastery status, or reset progress
+            to run a fresh diagnostic simulation.
+          </p>
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
+            <button
+              type="button"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-cyan-400 text-slate-900 font-semibold hover:bg-cyan-300 shadow-md shadow-cyan-500/20 transition-all inline-flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 text-sm"
+              onClick={onNavigateToKnowledgeMap}
+            >
+              <Layers size={16} />
+              <span>Inspect Knowledge Map</span>
+            </button>
+            <button
+              type="button"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-600 bg-slate-900/60 text-white hover:bg-slate-800 transition-all inline-flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 text-sm font-semibold"
+              onClick={onResetProgress}
+            >
+              <RotateCcw size={16} />
+              <span>Reset Diagnostic</span>
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -84,7 +90,18 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
 
   const { question, recommendationType, reason, topicTitle, targetTopic } =
     recommendation;
-  const currentTopicMastery = masteries[targetTopic];
+
+  // Safe fallback to prevent undefined errors when accessing targetTopic mastery
+  const currentTopicMastery: TopicMastery = masteries?.[targetTopic] ?? {
+    topicId: targetTopic,
+    topicTitle: topicTitle || question?.topicTitle || 'Target Topic',
+    totalAttempts: 0,
+    correctAttempts: 0,
+    incorrectAttempts: 0,
+    accuracyPercentage: null,
+    status: 'not_assessed',
+    failedConcepts: [],
+  };
 
   const handleSelect = (index: number) => {
     if (isAnswered) return;
@@ -100,8 +117,8 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
 
     // Save previous mastery snapshot before submitting update
     setPreAnswerMastery({
-      accuracy: currentTopicMastery.accuracyPercentage,
-      status: currentTopicMastery.status,
+      accuracy: currentTopicMastery.accuracyPercentage ?? null,
+      status: currentTopicMastery.status ?? 'not_assessed',
     });
 
     onAnswerSubmit(question, selectedOption, isCorrect);
@@ -120,29 +137,29 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
     switch (recommendationType) {
       case 'weak_targeted':
         return (
-          <span className="rec-badge weak">
-            <AlertCircle size={14} />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-500/15 text-rose-300 border border-rose-500/30">
+            <AlertCircle size={14} className="shrink-0" />
             <span>Targeting Weak Area</span>
           </span>
         );
       case 'developing_targeted':
         return (
-          <span className="rec-badge developing">
-            <TrendingUp size={14} />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
+            <TrendingUp size={14} className="shrink-0" />
             <span>Elevating Developing Topic</span>
           </span>
         );
       case 'new_topic_diagnostic':
         return (
-          <span className="rec-badge diagnostic">
-            <HelpCircle size={14} />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+            <HelpCircle size={14} className="shrink-0" />
             <span>Initial Baseline Diagnostic</span>
           </span>
         );
       case 'spaced_reinforcement':
         return (
-          <span className="rec-badge reinforcement">
-            <Sparkles size={14} />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            <Sparkles size={14} className="shrink-0" />
             <span>Spaced Reinforcement</span>
           </span>
         );
@@ -154,50 +171,84 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
   // Letter options A, B, C, D
   const optionLetters = ['A', 'B', 'C', 'D'];
 
+  // Safe post-answer mastery metrics
+  const postMastery = masteries?.[targetTopic];
+  const postAccuracy =
+    postMastery?.accuracyPercentage !== undefined
+      ? postMastery.accuracyPercentage
+      : currentTopicMastery.accuracyPercentage;
+  const postStatus = (
+    postMastery?.status ||
+    currentTopicMastery.status ||
+    'not_assessed'
+  )
+    .replace('_', ' ')
+    .toUpperCase();
+
   return (
-    <div>
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6">
       {/* 1. Recommendation Grounding Banner */}
-      <div className="recommendation-banner">
-        <div className="recommendation-top">
-          {renderRecommendationBadge()}
-          <div className="rec-topic">
-            Topic Focus: <span>{topicTitle}</span>
-            {currentTopicMastery.status !== 'not_assessed' && (
-              <span style={{ color: '#94a3b8', marginLeft: '0.5rem' }}>
-                ({currentTopicMastery.accuracyPercentage}% Current Accuracy)
-              </span>
-            )}
+      <div className="p-4 sm:p-5 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/40 via-slate-900/80 to-indigo-950/40 backdrop-blur-md shadow-lg shadow-cyan-500/5 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div>{renderRecommendationBadge()}</div>
+          <div className="text-xs sm:text-sm text-slate-300 font-medium">
+            Topic Focus:{' '}
+            <span className="text-white font-bold">
+              {topicTitle || question?.topicTitle || 'General Topic'}
+            </span>
+            {currentTopicMastery.status !== 'not_assessed' &&
+              currentTopicMastery.accuracyPercentage !== null && (
+                <span className="text-slate-400 ml-2">
+                  ({currentTopicMastery.accuracyPercentage}% Current Accuracy)
+                </span>
+              )}
           </div>
         </div>
-        <p className="rec-reason">{reason}</p>
+        <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-normal">
+          {reason}
+        </p>
       </div>
 
       {/* 2. Interactive Question Card */}
-      <div className="question-card">
-        <div className="question-meta-bar">
-          <div className="meta-tags">
-            <span className="pill-tag">
-              <BookOpen size={12} />
-              <span>{topicTitle}</span>
+      <div className="p-4 sm:p-6 md:p-8 rounded-2xl border border-slate-700/60 bg-slate-900/70 backdrop-blur-md shadow-xl space-y-5 sm:space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 border-b border-slate-800">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700">
+              <BookOpen size={12} className="text-cyan-400" />
+              <span>{topicTitle || question?.topicTitle || 'Topic'}</span>
             </span>
-            <span className={`pill-tag difficulty-${question.difficulty}`}>
+
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
+                question.difficulty === 'easy'
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                  : question.difficulty === 'medium'
+                  ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                  : 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+              }`}
+            >
               <span>{question.difficulty.toUpperCase()}</span>
             </span>
-            <span className="pill-tag">
-              <span>Concept: {question.concept}</span>
-            </span>
+
+            {question.concept && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700">
+                Concept: {question.concept}
+              </span>
+            )}
           </div>
 
-          <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 600 }}>
+          <span className="text-xs font-mono text-slate-500">
             ID: {question.id}
           </span>
         </div>
 
-        <h3 className="question-prompt">{question.question}</h3>
+        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white leading-relaxed">
+          {question.question}
+        </h3>
 
         {/* Code Snippet (if available) */}
         {question.codeSnippet && (
-          <div className="code-container">
+          <div className="rounded-xl bg-slate-950/90 border border-slate-800 p-3.5 sm:p-4 overflow-x-auto text-xs sm:text-sm font-mono text-cyan-300 leading-relaxed shadow-inner">
             <pre>
               <code>{question.codeSnippet}</code>
             </pre>
@@ -205,29 +256,46 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
         )}
 
         {/* 4 Multiple Choice Options */}
-        <div className="options-list">
+        <div className="space-y-3 w-full">
           {question.options.map((optionText, idx) => {
-            let optionClass = 'option-btn';
+            let stateStyles =
+              'border-slate-700/80 bg-slate-900/50 hover:bg-slate-800/80 hover:border-slate-500 text-slate-200';
+            let letterStyles = 'bg-slate-800 text-slate-400';
+
             if (isAnswered) {
               if (idx === question.correctAnswer) {
-                optionClass += ' correct';
+                stateStyles =
+                  'border-emerald-500 bg-emerald-500/15 text-emerald-100 font-semibold shadow-md shadow-emerald-500/10';
+                letterStyles = 'bg-emerald-500 text-white';
               } else if (idx === selectedOption) {
-                optionClass += ' incorrect';
+                stateStyles =
+                  'border-rose-500 bg-rose-500/15 text-rose-100 font-semibold shadow-md shadow-rose-500/10';
+                letterStyles = 'bg-rose-500 text-white';
+              } else {
+                stateStyles = 'border-slate-800/60 bg-slate-950/40 text-slate-500 opacity-60';
               }
             } else if (selectedOption === idx) {
-              optionClass += ' selected';
+              stateStyles =
+                'border-cyan-400 bg-cyan-500/15 text-white shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400/50';
+              letterStyles = 'bg-cyan-400 text-slate-950 font-bold';
             }
 
             return (
               <button
                 key={idx}
                 type="button"
-                className={optionClass}
+                className={`w-full text-left p-3.5 sm:p-4 rounded-xl border transition-all duration-150 flex items-start gap-3 sm:gap-4 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 min-h-[48px] ${stateStyles}`}
                 onClick={() => handleSelect(idx)}
                 disabled={isAnswered}
               >
-                <span className="option-letter">{optionLetters[idx]}</span>
-                <span>{optionText}</span>
+                <span
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 transition-colors ${letterStyles}`}
+                >
+                  {optionLetters[idx]}
+                </span>
+                <span className="text-xs sm:text-sm leading-relaxed pt-0.5 sm:pt-1 break-words flex-1">
+                  {optionText}
+                </span>
               </button>
             );
           })}
@@ -235,10 +303,10 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
 
         {/* Submit Button (before answer submission) */}
         {!isAnswered && (
-          <div className="card-actions">
+          <div className="flex justify-end pt-2">
             <button
               type="button"
-              className="primary-btn"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-cyan-400 text-slate-900 font-semibold hover:bg-cyan-300 shadow-md shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all inline-flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 text-sm"
               onClick={handleSubmit}
               disabled={selectedOption === null}
             >
@@ -251,52 +319,64 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
         {/* 3. Immediate Feedback & Mastery Update Section */}
         {isAnswered && (
           <div
-            className={`feedback-box ${lastAnswerCorrect ? 'correct' : 'incorrect'}`}
+            className={`p-4 sm:p-6 rounded-2xl border transition-all duration-200 space-y-4 ${
+              lastAnswerCorrect
+                ? 'border-emerald-500/30 bg-emerald-950/20 text-emerald-300'
+                : 'border-rose-500/30 bg-rose-950/20 text-rose-300'
+            }`}
           >
-            <div className="feedback-header">
-              <div className="feedback-status">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+              <div className="flex items-center gap-2.5">
                 {lastAnswerCorrect ? (
                   <>
-                    <CheckCircle size={22} />
-                    <span>Correct Answer! Well done.</span>
+                    <CheckCircle2 size={24} className="text-emerald-400 shrink-0" />
+                    <span className="text-base sm:text-lg font-bold text-white">
+                      Correct Answer! Well done.
+                    </span>
                   </>
                 ) : (
                   <>
-                    <XCircle size={22} />
-                    <span>Incorrect Choice</span>
+                    <XCircle size={24} className="text-rose-400 shrink-0" />
+                    <span className="text-base sm:text-lg font-bold text-white">
+                      Incorrect Choice
+                    </span>
                   </>
                 )}
               </div>
 
-              {/* Immediate Mastery Update Tag */}
-              <div className="mastery-update-tag">
-                <TrendingUp size={14} style={{ color: '#06b6d4' }} />
+              {/* Immediate Mastery Update Tag (Strictly Undefined-Safe) */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-xs sm:text-sm font-semibold text-cyan-300">
+                <TrendingUp size={16} className="text-cyan-400 shrink-0" />
                 <span>
-                  {topicTitle} Mastery:{' '}
+                  {topicTitle || 'Topic'} Mastery:{' '}
                   {preAnswerMastery?.accuracy !== null &&
                   preAnswerMastery?.accuracy !== undefined
                     ? `${preAnswerMastery.accuracy}%`
                     : 'Unassessed'}{' '}
                   ➔{' '}
-                  <strong style={{ color: '#38bdf8' }}>
-                    {masteries[targetTopic].accuracyPercentage}% (
-                    {masteries[targetTopic].status.toUpperCase()})
+                  <strong className="text-cyan-200 font-bold">
+                    {postAccuracy !== null && postAccuracy !== undefined
+                      ? `${postAccuracy}%`
+                      : 'Unassessed'}{' '}
+                    ({postStatus})
                   </strong>
                 </span>
               </div>
             </div>
 
-            <div className="feedback-explanation">
-              <strong>Key Concept Breakdown:</strong>
-              <p style={{ marginTop: '0.35rem', whiteSpace: 'pre-line' }}>
+            <div className="space-y-1.5">
+              <strong className="text-xs uppercase font-bold tracking-wider text-slate-300">
+                Key Concept Breakdown:
+              </strong>
+              <div className="p-3.5 sm:p-4 rounded-xl bg-slate-950/70 border border-slate-800 text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line">
                 {question.explanation}
-              </p>
+              </div>
             </div>
 
-            <div className="feedback-actions">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
               <button
                 type="button"
-                className="secondary-btn"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-600 bg-slate-900/60 text-white hover:bg-slate-800 transition-all inline-flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
                 onClick={onNavigateToKnowledgeMap}
               >
                 <Layers size={14} />
@@ -305,7 +385,7 @@ export const AdaptivePractice: React.FC<AdaptivePracticeProps> = ({
 
               <button
                 type="button"
-                className="primary-btn"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-cyan-400 text-slate-900 font-semibold hover:bg-cyan-300 shadow-md shadow-cyan-500/20 transition-all inline-flex items-center justify-center gap-2 text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
                 onClick={handleNext}
               >
                 <span>Next Recommended Question</span>
